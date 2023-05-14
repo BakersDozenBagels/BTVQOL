@@ -32,7 +32,9 @@ public class BTVQOL : MonoBehaviour
         if (_harmed)
             yield break;
 
-        _defaultProjection = Camera.main.projectionMatrix;
+        _defaultProjection = Camera.main == null 
+            ? Matrix4x4.identity
+            : Camera.main.projectionMatrix;
 
         do
         {
@@ -40,7 +42,7 @@ public class BTVQOL : MonoBehaviour
                 .CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => GetSafeTypes(a))
-                .FirstOrDefault(t => t.Name.Equals("SceneManager"));
+                .FirstOrDefault(t => t != null && t.Name.Equals("SceneManager"));
             yield return new WaitForSeconds(1f);
         }
         while (_sceneManager == null);
@@ -52,7 +54,7 @@ public class BTVQOL : MonoBehaviour
                 .CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => GetSafeTypes(a))
-                .FirstOrDefault(t => t.Name.Equals("BTVScript"));
+                .FirstOrDefault(t => t != null && t.Name.Equals("BTVScript"));
             yield return new WaitForSeconds(5f);
         }
         while (btvType == null);
@@ -60,6 +62,7 @@ public class BTVQOL : MonoBehaviour
         Type displayClass = btvType
             .GetNestedTypes(BindingFlags.NonPublic)
             .FirstOrDefault(t =>
+                t != null &&
                 t.Name.Contains("Death")
                 && typeof(IEnumerator).IsAssignableFrom(t));
 
