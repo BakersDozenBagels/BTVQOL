@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
+  m_Name: ModConfig
+  m_EditorClassIdentifier: 
+  id: BTVQOL
+  title: BadTV QOL
+  author: BakersDozenBagels
+  description: 'This mod makes BadTV simply eject you to the office instead of crashing
+    your game.
+
+
+    Source: https://github.com/BakersDozenBagels/BTVQOL'
+  version: 1.0
+  outputFolder: build
+  previewImage: {fileID: 2800000, guid: 6a247c133ae4bcb40b8dc858af903957, type: 3}
