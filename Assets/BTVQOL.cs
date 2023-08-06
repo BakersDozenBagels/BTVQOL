@@ -13,6 +13,7 @@ public class BTVQOL : MonoBehaviour
     private static bool _harmed;
     private static Type _sceneManager;
     private static Matrix4x4 _defaultProjection;
+    private static Action _cameraZoomReset = () => { };
 
     private IEnumerator Start()
     {
@@ -31,6 +32,8 @@ public class BTVQOL : MonoBehaviour
 
         if (_harmed)
             yield break;
+
+        StartCoroutine(FindCameraZoom());
 
         _defaultProjection = Camera.main == null 
             ? Matrix4x4.identity
@@ -76,6 +79,36 @@ public class BTVQOL : MonoBehaviour
         _harmed = true;
     }
 
+    private IEnumerator FindCameraZoom()
+    {
+        Type zoom;
+        do
+        {
+            zoom = AppDomain
+                .CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => GetSafeTypes(a))
+                .FirstOrDefault(t => t != null && t.Name.Equals("CamZoom"));
+            yield return new WaitForSeconds(1f);
+        }
+        while (zoom == null);
+
+        MethodInfo czMethod = zoom
+            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+            .FirstOrDefault(mi => mi.GetParameters().Length == 1 && mi.GetParameters()[0].ParameterType == typeof(KMGameInfo.State));
+        if (czMethod == null)
+            throw new Exception("No relevant method found in CamZoom. Please contact Bagels so he can write a better mod to handle this.");
+
+        _cameraZoomReset = () =>
+        {
+            UnityEngine.Object cz = FindObjectOfType(zoom);
+            if (cz == null)
+                return;
+            czMethod.Invoke(cz, new object[] { KMGameInfo.State.Transitioning });
+        };
+        Debug.Log("[BadTV QOL] Found Camera Zoom, applying fix.");
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -114,6 +147,8 @@ public class BTVQOL : MonoBehaviour
         _sceneManager
             .GetMethod("ReturnToSetupState", BindingFlags.Public | BindingFlags.Instance)
             .Invoke(sm, new object[0]);
+
+        _cameraZoomReset();
     }
 
     private Type[] GetSafeTypes(Assembly asm)
