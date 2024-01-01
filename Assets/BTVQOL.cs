@@ -12,7 +12,6 @@ public class BTVQOL : MonoBehaviour
     private static BTVQOL Instance { get; set; }
     private static bool _harmed;
     private static Type _sceneManager;
-    private static Matrix4x4 _defaultProjection;
     private static Action _cameraZoomReset = () => { };
 
     private IEnumerator Start()
@@ -35,10 +34,6 @@ public class BTVQOL : MonoBehaviour
 
         StartCoroutine(FindCameraZoom());
 
-        _defaultProjection = Camera.main == null 
-            ? Matrix4x4.identity
-            : Camera.main.projectionMatrix;
-
         do
         {
             _sceneManager = AppDomain
@@ -58,7 +53,7 @@ public class BTVQOL : MonoBehaviour
                 .GetAssemblies()
                 .SelectMany(a => GetSafeTypes(a))
                 .FirstOrDefault(t => t != null && t.Name.Equals("BTVScript"));
-            yield return new WaitForSeconds(5f);
+            yield return new WaitForSeconds(15f);
         }
         while (btvType == null);
 
@@ -133,7 +128,7 @@ public class BTVQOL : MonoBehaviour
 
         Debug.Log("[BadTV QOL] Returning to setup room.");
         Camera.main.targetTexture = null;
-        Camera.main.projectionMatrix = _defaultProjection;
+        Camera.main.ResetProjectionMatrix();
         object sm = _sceneManager
             .GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
             .GetValue(null, new object[0]);
