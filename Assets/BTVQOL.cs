@@ -10,26 +10,66 @@ using System.Linq;
 public class BTVQOL : MonoBehaviour
 {
     private static BTVQOL Instance { get; set; }
-    private static bool _harmed;
+    private static bool _harmedBTV, _harmedWAR;
     private static Type _sceneManager;
     private static Action _cameraZoomReset = () => { };
+    private static Harmony _harm = new Harmony("BTVQOL.BakersDozenBagels.Ktane");
 
-    private IEnumerator Start()
+    private void Start()
     {
         if (Instance != null)
         {
             Debug.Log("[BadTV QOL] Error: duplicated service.");
             Destroy(gameObject);
-            yield break;
+            return;
         }
         Instance = this;
 
 #if UNITY_EDITOR
         if (Application.isEditor)
-            yield break;
+            return;
 #endif
 
-        if (_harmed)
+        StartCoroutine(FixBTV());
+        StartCoroutine(FixWAR());
+    }
+
+    private IEnumerator FixWAR()
+    {
+        if (_harmedWAR)
+            yield break;
+
+        Type warType;
+        do
+        {
+            warType = AppDomain
+                .CurrentDomain
+                .GetAssemblies()
+                .SelectMany(a => GetSafeTypes(a))
+                .FirstOrDefault(t => t != null && t.Name.Equals("WAR"));
+            yield return new WaitForSeconds(15f);
+        }
+        while (warType == null);
+
+        Type displayClass = warType
+            .GetNestedTypes(BindingFlags.NonPublic)
+            .FirstOrDefault(t =>
+                t != null &&
+                t.Name.Contains("DETONATE")
+                && typeof(IEnumerator).IsAssignableFrom(t));
+
+        if (displayClass == null)
+            throw new Exception("No relevant display class found in WAR. Please contact Bagels so he can write a better mod to handle this.");
+
+        MethodInfo method = displayClass.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public);
+        _harm.Patch(method, transpiler: new HarmonyMethod(typeof(BTVQOL).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
+        Debug.Log("[BadTV QOL] Successfully modified WAR.");
+        _harmedWAR = true;
+    }
+
+    private IEnumerator FixBTV()
+    {
+        if (_harmedBTV)
             yield break;
 
         StartCoroutine(FindCameraZoom());
@@ -68,10 +108,9 @@ public class BTVQOL : MonoBehaviour
             throw new Exception("No relevant display class found in BTVScript. Please contact Bagels so he can write a better mod to handle this.");
 
         MethodInfo method = displayClass.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public);
-        Harmony harm = new Harmony("BTVQOL.BakersDozenBagels.Ktane");
-        harm.Patch(method, transpiler: new HarmonyMethod(typeof(BTVQOL).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
+        _harm.Patch(method, transpiler: new HarmonyMethod(typeof(BTVQOL).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
         Debug.Log("[BadTV QOL] Successfully modified BadTV.");
-        _harmed = true;
+        _harmedBTV = true;
     }
 
     private IEnumerator FindCameraZoom()

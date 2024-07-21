@@ -18,7 +18,10 @@ MonoBehaviour:
     your game.
 
 
+    This also affects WAR in Zen Mode with its mod setting enabled.
+
+
     Source: https://github.com/BakersDozenBagels/BTVQOL'
-  version: 1.2
+  version: 2.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 6a247c133ae4bcb40b8dc858af903957, type: 3}
